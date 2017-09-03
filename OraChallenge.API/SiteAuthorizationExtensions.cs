@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.Extensions.Primitives;
 
 namespace OraChallenge.API
 {
@@ -44,9 +45,9 @@ namespace OraChallenge.API
                             c.NoResult();
 
                             c.Response.StatusCode = 401;
-                            c.Response.ContentType = "text/plain";
+                            c.Response.ContentType = "application/vnd.api+json";
 
-                            return c.Response.WriteAsync(c.Exception.ToString());
+                            return c.Response.WriteAsync("Unauthorized request or authorization failure.");
                         }
 
                     };
@@ -79,23 +80,21 @@ namespace OraChallenge.API
             claims.Add(new Claim("createdAt", DateTime.Now.ToString()));
             var token = new JwtSecurityToken(claims: claims,
             signingCredentials: new SigningCredentials(GetSignInKey(), SecurityAlgorithms.HmacSha256));
-            
+
             var tokenString = tokenHandler.WriteToken(token);
             return tokenString;
         }
 
-        public static string DecryptUserId(string authorization)
+        public static string DecryptUserId(string tokenStr)
         {
-            var tokenStr = authorization.Substring("Bearer ".Length).Trim();
-            return ReadUserIdFromJwtToken(tokenStr);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            JwtSecurityToken token = (JwtSecurityToken)tokenHandler.ReadToken(tokenStr);
+            return token.Payload["userId"].ToString();
         }
 
-        private static string ReadUserIdFromJwtToken(string tokenStr)
+        public static string GetTokenFromHeader(string authorization)
         {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                JwtSecurityToken token = (JwtSecurityToken)tokenHandler.ReadToken(tokenStr);
-                return token.Payload["userId"].ToString();
+            return authorization.Substring("Bearer ".Length).Trim();
         }
-
     }
 }

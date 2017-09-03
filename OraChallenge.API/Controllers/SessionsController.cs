@@ -49,8 +49,7 @@ namespace OraChallenge.API.Controllers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                return StatusCode(500, new { title = "Something went wrong, please try again." });
             }
 
         }

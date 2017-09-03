@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using JsonApiFramework.JsonApi;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using OraChallenge.API.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using OraChallenge.API.JsonApi;
 
 namespace OraChallenge.API.Controllers
@@ -55,8 +57,7 @@ namespace OraChallenge.API.Controllers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                return StatusCode(500, new { title = "Something went wrong, please try again." });
             }
 
 
@@ -73,9 +74,14 @@ namespace OraChallenge.API.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-
-                var userid = SiteAuthorizationExtensions.DecryptUserId(Request.Headers["Authorization"]);
+                var token = SiteAuthorizationExtensions.GetTokenFromHeader(Request.Headers["Authorization"]);
+                var userid = SiteAuthorizationExtensions.DecryptUserId(token);
                 var message = JsonApiUtil.GetMessageFromMesasgesPostRequest(document);
+
+                if (string.IsNullOrWhiteSpace(message))
+                {
+                    return StatusCode(422, new { title = "Field data error." });
+                }
 
                 var messageRecord = new MessageRecord()
                 {
@@ -98,8 +104,7 @@ namespace OraChallenge.API.Controllers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                return StatusCode(500, new {title= "Something went wrong, please try again." });
             }
 
         }

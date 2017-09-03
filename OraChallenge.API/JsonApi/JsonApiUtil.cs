@@ -113,8 +113,14 @@ namespace OraChallenge.API.JsonApi
 
         public static Document WriteDocumentForMessagesPostResponse(Uri currentRequestUrl, MessageRecord messageRecord)
         {
+            var meta = new Meta();
+            string json = @"{}";
+            JObject o = JObject.Parse(json);
+            meta.SetData(o);
+
             return new OraChallengeDocumentContext(currentRequestUrl.Host, currentRequestUrl.Port).NewDocument(currentRequestUrl)
 
+                .SetMeta(meta)
                 // Resource
                 .Resource(messageRecord)
                 .Relationships()
@@ -135,6 +141,9 @@ namespace OraChallenge.API.JsonApi
                 // Convert related "to-one" CLR Person resource to JSON API resource
                 // Automatically generate "to-one" resource linkage in article to related author
                 .ToOne(messageRecord, "creator", messageRecord.User)
+                .Links()
+                .AddSelfLink()
+                .LinksEnd()
                 .ToOneEnd()
                 .IncludedEnd()
 

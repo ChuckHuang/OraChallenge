@@ -40,7 +40,7 @@ namespace OraChallenge.API.JsonApi
                 .Included()
                 // Convert related "to-one" CLR Person resource to JSON API resource
                 // Automatically generate "to-one" resource linkage in article to related author
-                .ToOne(session.User, "creator", session.User)
+                .ToOne(session, "creator", session.User)
                 .Links()
                 .AddSelfLink()
                 .LinksEnd()

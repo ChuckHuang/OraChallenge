@@ -1,7 +1,6 @@
 using System;
-using System.IdentityModel.Tokens.Jwt;
+using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using JsonApiFramework.JsonApi;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
@@ -11,14 +10,13 @@ using Microsoft.EntityFrameworkCore;
 using OraChallenge.API.Models;
 using JsonApiFramework.Server;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.IdentityModel.Tokens;
 using OraChallenge.API.JsonApi;
 
 namespace OraChallenge.API.Controllers
 {
-    [Produces("application/json")]
+    [Produces("application/vnd.api+json")]
     [Route("api/Messages", Name = "MessagesList")]
-    
+
     public class MessagesController : Controller
     {
         private readonly OraChallengeDBContext _context;
@@ -40,64 +38,18 @@ namespace OraChallenge.API.Controllers
 
                 var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
 
-
                 var messages = _context.MessageRecord.Include(m => m.User).Skip(pageSize * (pageNumber - 1)).Take(pageSize).ToList();
 
                 var urlHelper = new UrlHelper(this.ControllerContext);
                 var currentRequestUrl = this.HttpContext.Request.GetUri();
 
+                var userid = SiteAuthorizationExtensions.DecryptUserId(Request.Headers["Authorization"]);
+                var newToken = SiteAuthorizationExtensions.CreateJwtToken(userid);
+                this.Response.Headers.Add("Authorization", "Bearer " + newToken);
+
                 // Build new document.
-                var document = new OraChallengeDocumentContext(currentRequestUrl.Host, currentRequestUrl.Port).NewDocument(this.Request.GetUri())
+                var document = JsonApiUtil.WriteDocumentForMessagesGetResponse(pageNumber, pageSize, currentRequestUrl, urlHelper, totalPages, messages);
 
-                    // Document links
-                    .Links()
-                    .AddLink(Keywords.Self, new Link(urlHelper.Link("MessagesList",
-                new
-                {
-                    pageNumber = pageNumber,
-                    pageSize = pageSize
-                })))
-                    .AddLink(Keywords.First, new Link(urlHelper.Link("MessagesList",
-                        new
-                        {
-                            pageNumber = 1,
-                            pageSize = pageSize
-                        })))
-                    .AddLink(Keywords.Prev, pageNumber > 1 ? new Link(urlHelper.Link("MessagesList",
-                        new
-                        {
-                            pageNumber = pageNumber - 1,
-                            pageSize = pageSize
-                        })) : null)
-                    .AddLink(Keywords.Next, pageNumber < totalPages ? new Link(urlHelper.Link("MessagesList",
-                        new
-                        {
-                            pageNumber = 1,
-                            pageSize = pageSize
-                        })) : null)
-                    .AddLink(Keywords.Last, new Link(urlHelper.Link("MessagesList",
-                        new
-                        {
-                            pageNumber = totalPages,
-                            pageSize = pageSize
-                        })))
-                    .LinksEnd()
-
-                    // Resource
-                    .ResourceCollection(messages)
-                    .Relationships()
-                    .Relationship("creator")
-                    .Links()
-                    .AddSelfLink()
-                    .AddRelatedLink()
-                    .LinksEnd()                  
-                    .RelationshipEnd()
-                    .RelationshipsEnd()
-                    .Links()
-                    .AddSelfLink()
-                    .LinksEnd()
-                    .ResourceCollectionEnd()
-                    .WriteDocument();
 
                 // Return 200 OK
                 // Note: WebApi JsonMediaTypeFormatter serializes the JSON API document into JSON. 
@@ -112,6 +64,7 @@ namespace OraChallenge.API.Controllers
 
         }
 
+
         // POST: api/Messages
         [HttpPost]
         public async Task<IActionResult> PostMessage([FromBody] ResourceDocument document)
@@ -123,56 +76,26 @@ namespace OraChallenge.API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                string authorization = Request.Headers["Authorization"];
+                var userid = SiteAuthorizationExtensions.DecryptUserId(Request.Headers["Authorization"]);
+                var message = JsonApiUtil.GetMessageFromMesasgesPostRequest(document);
 
-                var tokenStr = authorization.Substring("Bearer ".Length).Trim();
-                var userid = SiteAuthorizationExtensions.ReadUserIdFromJwtToken(tokenStr);
-                ApiProperty des = null;
-                document.Data.Attributes.TryGetApiProperty("message", out des);
-                var str = des.ToString();
-                var sects = str.Split(':');
-                var message = new MessageRecord()
+                var messageRecord = new MessageRecord()
                 {
                     UserId = int.Parse(userid),
-                    Message = sects[1],
+                    Message = message,
                     CreatedAt = DateTime.Now
                 };
-                _context.MessageRecord.Add(message);
+                _context.MessageRecord.Add(messageRecord);
                 await _context.SaveChangesAsync();
-                message = _context.MessageRecord.Include(m=>m.User).FirstOrDefault(m=>m.Id == message.Id);
-                var urlHelper = new UrlHelper(this.ControllerContext);
+                messageRecord.User = _context.User.FirstOrDefault(u => u.Id == messageRecord.UserId);
+
+                var newToken = SiteAuthorizationExtensions.CreateJwtToken(userid);
+                this.Response.Headers.Add("Authorization", "Bearer " + newToken);
+
                 var currentRequestUrl = this.HttpContext.Request.GetUri();
 
                 // Build new document.
-                var newDocument = new OraChallengeDocumentContext(currentRequestUrl.Host, currentRequestUrl.Port).NewDocument(this.Request.GetUri())
-
-                   
-                    // Resource
-                    .Resource(message)
-                    .Relationships()
-                    .Relationship("creator")
-                    .Links()
-                    .AddSelfLink()
-                    .AddRelatedLink()
-                    .LinksEnd()
-                    .RelationshipEnd()
-                    .RelationshipsEnd()
-                    .Links()
-                    .AddSelfLink()
-                    .LinksEnd()
-                    .ResourceEnd()
-
-                    // With included resources
-                    .Included()
-                    // Convert related "to-one" CLR Person resource to JSON API resource
-                    // Automatically generate "to-one" resource linkage in article to related author
-                    .ToOne(message, "creator", message.User)                  
-                    .ToOneEnd()
-                    .IncludedEnd()
-
-                    
-
-                    .WriteDocument();
+                var newDocument = JsonApiUtil.WriteDocumentForMessagesPostResponse(currentRequestUrl, messageRecord);
                 return Created(currentRequestUrl.AbsoluteUri, newDocument);
             }
             catch (Exception e)
@@ -180,7 +103,8 @@ namespace OraChallenge.API.Controllers
                 Console.WriteLine(e);
                 throw;
             }
-           
+
         }
+
     }
 }

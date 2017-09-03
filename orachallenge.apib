@@ -1,0 +1,400 @@
+FORMAT: 1A
+HOST: https://private-e46dd-orachallenge.apiary-mock.com
+
+# Ora Challenge - 2017
+
+Mock API to be used with the Ora Code Challenge application. 
+
+__Version 0.1__
+- Compiled by __Andre Sugai__
+
+Questions or comments? Email [andre@orainteractive.com](mailto:andre@orainteractive.com)
+
+# Description
+
+This chat application is being designed to provide you with a playground to showcase your current development skills.
+
+It is a simple chat app - all messages will post on a global channel and all users can see all messages.
+
+On first open, apps should request a new `session` which will automatically generate a new random user.
+
+## Requirements
+
+### For front-end developers: iOS / Android / ( Angular | React + Redux | Ember.JS )
+Your challenge is to build a small front-end application following best practices that interacts with the API specified in this document.
+
+A sample UI design can be found here: [Sketch file](https://drive.google.com/open?id=0B0LrHhym7QrkdzRYXzVIVENvNUk). It includes web and mobile designs.
+
+A mock API is provided here: [Mock API](https://private-e46dd-orachallenge.apiary-mock.com)
+
+- For iOS applicants, please use the latest version of Swift
+- For Android applications, please use Java
+- For Ember.JS, use Ember.JS!
+
+Only if requested by Ora:
+- For Angular applications, please use Angular
+- For React + Redux, please use React + Redux
+
+### For full-stack developers: PHP / C# / Java
+Your challenge is to build the RESTful API specified in this document using your choice of the following languages and frameworks:
+
+- PHP: [Laravel](http://laravel.com/)
+
+Only if requested by Ora:
+- C#: [Entity Framework](https://msdn.microsoft.com/en-us/data/ef.aspx?f=255&MSPPError=-2147217396)
+- Java: [Spring](https://spring.io/)
+
+## Time limit
+
+Your time limit is 5 days after the you receive this challenge.
+
+If you need more time, please email [andre@orainteractive.com](mailto:andre@orainteractive.com) to let us know.
+
+## Standards
+
+Use best practices for coding style, unit testing, etc.
+
+We recommend:
+- Swift - [The Swift Programming Language](https://developer.apple.com/library/content/documentation/Swift/Conceptual/Swift_Programming_Language/index.html#//apple_ref/doc/uid/TP40014097-CH3-ID0)
+- Android - [Android Code Style Guidelines](https://source.android.com/source/code-style.html)
+- EmberJS - [EmberJS Style Guide](https://github.com/emberjs/ember.js/blob/master/STYLEGUIDE.md)
+- PHP - [PHP-FIG](http://www.php-fig.org/)
+- C# - [C# Coding Conventions](https://msdn.microsoft.com/en-us/library/ff926074.aspx)
+- Angular - [Angular Style Guide](https://angular.io/docs/ts/latest/guide/style-guide.html)
+- Java - [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html)
+
+## Packages, Plugins, and Reusable Code
+
+Use packages, gems, plugins, cocoapods, etc. as needed.
+
+Any plugin used should also follow standards and best practices.
+
+## Submission
+
+### Versioning System
+
+At Ora, we use [Github](http://github.com) for all of our code versioning. 
+
+We would like you to deliver a well constructed github repository where we can find your work.
+
+We will be looking to review how you setup your commits as well as issues (if applicable). We encourage using some kind of branching methodology - we use [Gitflow](http://nvie.com/posts/a-successful-git-branching-model/).
+
+### Note
+
+All submissions should be accompanied by any necessary compilation or deployment instructions in a README file in the root of the repository.
+
+# General Notes
+
+## Endpoints
+
+- Apiary Mock - https://private-e46dd-orachallenge.apiary-mock.com
+
+## Request and Response Structure
+
+The JSON API specification details out the requirements for requests and responses as `client` and `server` responsibilities.
+
+In short, both systems `MUST` communicate with this header: `Content-Type: application/vnd.api+json`.
+
+`Accept: application/vnd.api+json` should also be listed for the `client` side.
+
+For more information: [http://jsonapi.org/format/#content-negotiation](http://jsonapi.org/format/#content-negotiation)
+
+## Success and Error Responses
+
+The `success` and `error` responses to be expected should conform to those outlined in the JSON API specifications.
+
+These are outlined throught the main documentation so pay special attention to the ones listed in these sections:
+
+- [Fetching](http://jsonapi.org/format/#fetching)
+- [CRUD](http://jsonapi.org/format/#crud)
+- [Query Params](http://jsonapi.org/format/#query-parameters)
+
+## Pagination
+
+For our purposes, the `server` must supply pagination any time a `collection` endpoint is hit.
+
+The `server` must also list `first`, `last`, `prev`, and `next` properties for it, even if `next` or `prev` is `null`.
+
+For more information: [http://jsonapi.org/format/#fetching-pagination](http://jsonapi.org/format/#fetching-pagination)
+
+## Errors
+
+The `server` should always return errors as specified in JSON API specifications.
+
+The `errors` expected for each endpoint should be listed on this `Apiary` document.
+
+For more information: [http://jsonapi.org/format/#errors](http://jsonapi.org/format/#errors)
+
+## Security
+
+This application should use JSON Web Tokens (JWT) as a means of authenticating a user session.
+
+It should also employ a means to rotate a token with each request via a response Authorization header.
+
+## Dates
+
+All dates should be expressed in ISO8601 format and will always be assumed to be UTC.
+
+`2019-10-04T22:44:30Z`
+
+`2019-10-04T22:44:30+00:00`
+
+# Group Session Endpoints
+
+# Session [/api/v1/sessions]
+
+## Create [POST]
+
+This endpoint allows a user to begin a session.
+
+The response should include a JWT `Authorization` token header.
+
+Note: A user object is randomly generated by the server when a session is created
+
+`username` should be a String, `user` + random alphanumeric up to 6 characters
+
++ Request (application/vnd.api+json)
+
+    + Headers
+
+            Accept: application/vnd.api+json
+    
+    + Attributes
+        + data (required, object)
+            + type: `sessions` (required, string)
+
++ Response 201 (application/vnd.api+json)
+    
+    + Headers
+
+            Authorization: Bearer BBJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+
+    + Attributes (Single)
+        + data (required, Session)
+            + relationships (required, Session Relationships)
+        + included (required, array)
+            + (required, User)
+
++ Response 401 (application/vnd.api+json)
+
+    If the `Authorization` token has expired or cannot be read.
+
+    + Attributes (Errors)
+        + errors (array[Error Unauthorized])
+        
++ Response 422 (application/vnd.api+json)
+
+    If any required field is empty or otherwise has bad input.
+
+    + Attributes (Errors)
+        + errors (array[Error Unprocessable Entity])
+
+# Group Message Endpoints
+
+# Messages [/api/v1/messages]
+
+## List [GET /api/v1/messages?page[number]={number}&page[size]={size}]
+
+This endpoint gets a paginated list of chats.
+
++ Parameters
+    + number: `1` (optional, string)
+    + size: `10` (optional, string)
+
++ Request (application/vnd.api+json)
+
+    + Headers
+
+            Accept: application/vnd.api+json
+            Authorization: Bearer BBJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+
++ Response 200 (application/vnd.api+json)
+
+    + Headers
+    
+            Authorization: Bearer BBJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+
+    + Attributes (Collection)
+        + data (array)
+            + (Message)
+                + relationships (required, Message Relationships)
+        + included (required, array)
+            + (required, User)
+        + links (required, object)
+            + self: `https://private-c0530-iyo.apiary-mock.com/api/v1/messages?page[number]=1&page[size]=10` (required, string)
+            + first: `https://private-c0530-iyo.apiary-mock.com/api/v1/messages?page[number]=1&page[size]=10` (required, string)
+            + prev (nullable, string)
+            + next (nullable, string)
+            + last: `https://private-c0530-iyo.apiary-mock.com/api/v1/messages?page[number]=1&page[size]=10` (required, string)
+        + meta (required, object)
+            + count: `1` (required, number)
+
+## Create [POST]
+
+This endpoint allows a User to message on a chat.
+
++ Request (application/vnd.api+json)
+
+    + Headers
+
+            Accept: application/vnd.api+json
+            Authorization: Bearer BBJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+
+    + Attributes
+        + data (required, object)
+            + type: `messages` (required, string)
+            + attributes (required, object)
+                + message: `You gotta go with option 1` (optional, string)
+
++ Response 201 (application/vnd.api+json)
+
+    + Headers
+    
+            Authorization: Bearer BBJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+
+    + Attributes (Single)
+        + data (Message)
+            + relationships (required, Message Relationships)
+        + included (required, array)
+            + (required, User)
+
++ Response 401 (application/vnd.api+json)
+
+    If the `Authorization` token has expired or cannot be read.
+
+    + Attributes (Errors)
+        + errors (array[Error Unauthorized])
+
++ Response 403 (application/vnd.api+json)
+
+    If the `Authorized` User cannot message on this particular Chat.
+
+    + Headers
+
+            Authorization: Bearer BBJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+
+    + Attributes (Errors)
+        + errors (array[Error Forbidden])
+
++ Response 422 (application/vnd.api+json)
+
+    If the `message` field is empty or otherwise has bad input.
+
+    + Headers
+
+            Authorization: Bearer BBJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+
+    + Attributes (Errors)
+        + errors (array[Error Unprocessable Entity])
+
+# Data Structures
+
+## Resource (object)
++ type: `object` (required, string) - Resource name.
++ id: `1` (required, string) - Primary ID.
++ attributes (optional, object) - Data set on the resource.
++ relationships (optional, object) - Any related data.
++ links (optional, object)
+    + self: `https://private-c0530-iyo.apiary-mock.com/api/v1/object/1` (required, string)
+
+## Single (object)
++ data (Resource)
++ included (required, array) - Holds related datasets.
++ meta (required, object) - additional data
+
+## Collection (object)
++ data (array[Resource])
++ included (required, array) - Holds related datasets.
++ meta (required, object) - additional data
++ links (required, object)
+    + self (required, string) - Absolute url to the current page's json response.
+    + first (required, string) - Absolute url to the first page's json response.
+    + prev (nullable, string) - Absolute url to the previous page of json response
+    + next (nullable, string) - Absolute url to the next page of json response.
+    + last (required, string) - Absolute url to the last page of json response.
+
+## Relationship (object)
++ type: `objects` (required, string)
++ id: `1` (required, string)
+
+## Session (Resource)
++ type: `sessions` (required, string)
++ attributes (required, object)
+    + created_at: `2017-03-03T03:03:03+00:00`
++ links (optional, object)
+    + self: `https://private-c0530-iyo.apiary-mock.com/api/v1/sessions/1` (required, string)
+
+## Session Relationships (object)
++ creator (required, Session Creator Relationship)
+
+## Session Creator Relationship (object)
++ links (required, object)
+    + self: `https://private-c0530-iyo.apiary-mock.com/api/v1/sessions/1/relationships/creator` (required, string)
+    + related: `https://private-c0530-iyo.apiary-mock.com/api/v1/sessions/1/creator` (required, string)
++ data (required, Relationship)
+    + type: `users`
+
+## User (Resource)
++ type: `users` (required, string)
++ attributes (required, object)
+    + username: `user12345` (required, string)
++ links (optional, object)
+    + self: `https://private-c0530-iyo.apiary-mock.com/api/v1/users/1` (required, string)
+
+## Message (Resource)
++ type: `messages` (required, string)
++ attributes (required, object)
+    + created_at: `2017-02-02T03:00:00Z` (required, string)
+    + message: `Hey everyone!` (required, string)
++ links (required, object)
+    + self: `https://private-c0530-iyo.apiary-mock.com/api/v1/messages/1` (required, string)
+
+## Message Relationships (object)
++ creator (required, Message Creator Relationship)
+
+## Message Creator Relationship
++ links (required, object)
+    + self: `https://private-c0530-iyo.apiary-mock.com/api/v1/messages/1/relationships/creator` (required, string)
+    + related: `https://private-c0530-iyo.apiary-mock.com/api/v1/messages/1/creator` (required, string)
++ data (required, Relationship)
+    + type: `users`
+
+## Errors (object)
++ errors (array[Error])
+
+## Error (object)
++ status (required, string) - Error status code
++ title (required, string) - Error title
++ message (nullable, string) - Descriptive error message
++ source (required, Source) - Source of error
+
+## Source (object)
++ pointer (required, string) - Route to error property in object structure
+
+## Error Invalid Request (Error)
++ status: `400`
++ title: `Payload format error.`
+
+## Error Unauthorized (Error)
++ status: `401`
++ title: `Unauthorized request or authorization failure.`
+
+## Error Forbidden (Error)
++ status: `403`
++ title: `You cannot perform this action.`
+
+## Error Not Found (Error)
++ status: `404`
++ title: `Object not found.`
+
+## Error Conflict (Error)
++ status: `409`
++ title: `One or more fields conflict with existing data.`
+
+## Error Unprocessable Entity (Error)
++ status: `422`
++ title: `Field data error.`
+
+## Error Internal Server Error (Error)
++ status: `500`
++ title: `Something went wrong, please try again.`

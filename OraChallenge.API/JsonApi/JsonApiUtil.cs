@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using JsonApiFramework.JsonApi;
 using JsonApiFramework.Server;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using OraChallenge.API.Models;
 
 namespace OraChallenge.API.JsonApi
@@ -11,13 +13,22 @@ namespace OraChallenge.API.JsonApi
     {
         public static Document WriteDocumentForSessionsPostResponse(Uri currentRequestUrl, Session session)
         {
-            return new OraChallengeDocumentContext(currentRequestUrl.Host, currentRequestUrl.Port).NewDocument(currentRequestUrl)
+            var meta = new Meta();
+            string json = @"{}";
+            JObject o = JObject.Parse(json);
+            meta.SetData(o);
 
-
+            var response = new OraChallengeDocumentContext(currentRequestUrl.Host, currentRequestUrl.Port).NewDocument(currentRequestUrl)
+                
+                .SetMeta(meta)
                 // Resource
                 .Resource(session)
                 .Relationships()
                 .Relationship("creator")
+                .Links()
+                .AddSelfLink()
+                .AddRelatedLink()
+                .LinksEnd()
                 .RelationshipEnd()
                 .RelationshipsEnd()
                 .Links()
@@ -37,12 +48,18 @@ namespace OraChallenge.API.JsonApi
                 .IncludedEnd()
 
                 .WriteDocument();
+            return response;
         }
 
         public static Document WriteDocumentForMessagesGetResponse(int pageNumber, int pageSize, Uri currentRequestUrl, UrlHelper urlHelper, int totalPages, List<MessageRecord> messages)
         {
-            return new OraChallengeDocumentContext(currentRequestUrl.Host, currentRequestUrl.Port).NewDocument(currentRequestUrl)
+            var meta = new Meta();
+            string json = @"{count: " + messages.Count + "}";        
+            JObject o = JObject.Parse(json);
+            meta.SetData(o);
 
+            return new OraChallengeDocumentContext(currentRequestUrl.Host, currentRequestUrl.Port).NewDocument(currentRequestUrl)
+                .SetMeta(meta)
                 // Document links
                 .Links()
                 .AddLink(Keywords.Self, new Link(urlHelper.Link("MessagesList",
@@ -76,7 +93,7 @@ namespace OraChallenge.API.JsonApi
                         pageSize = pageSize
                     })))
                 .LinksEnd()
-                
+
                 // Resource
                 .ResourceCollection(messages)
                 .Relationships()
@@ -90,11 +107,11 @@ namespace OraChallenge.API.JsonApi
                 .Links()
                 .AddSelfLink()
                 .LinksEnd()
-                .ResourceCollectionEnd()                
+                .ResourceCollectionEnd()
                 .WriteDocument();
         }
 
-       public static Document WriteDocumentForMessagesPostResponse(Uri currentRequestUrl, MessageRecord messageRecord)
+        public static Document WriteDocumentForMessagesPostResponse(Uri currentRequestUrl, MessageRecord messageRecord)
         {
             return new OraChallengeDocumentContext(currentRequestUrl.Host, currentRequestUrl.Port).NewDocument(currentRequestUrl)
 

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JsonApiFramework.JsonApi;
@@ -8,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using OraChallenge.API.Models;
-using JsonApiFramework.Server;
 using Microsoft.AspNetCore.Authorization;
 using OraChallenge.API.JsonApi;
 

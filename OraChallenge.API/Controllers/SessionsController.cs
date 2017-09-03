@@ -1,82 +1,61 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OraChallenge.API.Models;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using OraChallenge.API.JsonApi;
 using JsonApiFramework.JsonApi;
-using JsonApiFramework.Server;
 
 namespace OraChallenge.API.Controllers
 {
-    [Produces("application/json")]
+    [Produces("application/vnd.api+json")]
     [Route("api/Sessions")]
     public class SessionsController : Controller
     {
         private readonly OraChallengeDBContext _context;
         public SessionsController(OraChallengeDBContext context)
         {
-            _context = context;           
+            _context = context;
         }
 
         // POST: api/Messages
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ResourceDocument document)
         {
-            var username = CreateRandomUsername();
-
-            var user = new User() { UserName = username };
-            _context.User.Add(user);
-            await _context.SaveChangesAsync();
-            var token = SiteAuthorizationExtensions.CreateJwtToken(user.Id.ToString());
-
-            this.Response.Headers.Add("Authorization", "Bearer " + token);
-
-            var session = new Session()
+            try
             {
-                Id = user.Id,
-                CreatedAt = DateTime.Now,
-                User = user
-            };
+                var username = CreateRandomUsername();
 
-            var currentRequestUrl = this.HttpContext.Request.GetUri();
+                var user = new User() { UserName = username };
+                _context.User.Add(user);
+                await _context.SaveChangesAsync();
+                var token = SiteAuthorizationExtensions.CreateJwtToken(user.Id.ToString());
 
-            // Build new document.
-            var newDocument = new OraChallengeDocumentContext(currentRequestUrl.Host, currentRequestUrl.Port).NewDocument(this.Request.GetUri())
+                this.Response.Headers.Add("Authorization", "Bearer " + token);
+               
 
+                var session = new Session()
+                {
+                    Id = user.Id,
+                    CreatedAt = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                    User = user
+                };
 
-                // Resource
-                .Resource(session)
-                .Relationships()
-                .Relationship("creator")
-                .Links()
-                .AddSelfLink()
-                .AddRelatedLink()
-                .LinksEnd()
-                .RelationshipEnd()
-                .RelationshipsEnd()
-                .Links()
-                .AddSelfLink()
-                .LinksEnd()
-                .ResourceEnd()
+                var currentRequestUrl = this.HttpContext.Request.GetUri();
 
-                // With included resources
-                .Included()
-                // Convert related "to-one" CLR Person resource to JSON API resource
-                // Automatically generate "to-one" resource linkage in article to related author
-                .ToOne(user, "creator", user)
-                .ToOneEnd()
-                .IncludedEnd()
+                // Build new document.
+                var newDocument = JsonApiUtil.WriteDocumentForSessionsPostResponse(currentRequestUrl, session);
+                return Created(currentRequestUrl.AbsoluteUri, newDocument);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
 
-
-
-                .WriteDocument();
-            return Created(currentRequestUrl.AbsoluteUri, newDocument);
         }
 
+       
         private string CreateRandomUsername()
         {
             var random = new Random();

@@ -40,6 +40,8 @@ namespace OraChallenge.API.JsonApi
 
             messageConfiguration.Attribute(x => x.CreatedAt)
                 .SetApiPropertyName("created_at");
+
+
             messageConfiguration.ToOneRelationship<User>(rel: "creator");
 
             var userConfiguration = serviceModelBuilder.Resource<User>();
@@ -51,10 +53,18 @@ namespace OraChallenge.API.JsonApi
             userConfiguration.ResourceIdentity(x => x.Id)
                 .SetApiType("users");
 
+            // .. Attributes
+            userConfiguration.Attribute(x => x.UserName)
+                .SetApiPropertyName("username");
+
+
             var sessionConfiguration = serviceModelBuilder.Resource<Session>();
             // .. Hypermedia
             sessionConfiguration.Hypermedia()
                 .SetApiCollectionPathSegment("sessions");
+
+            sessionConfiguration.Attribute(x => x.CreatedAt)
+                .SetApiPropertyName("created_at");
 
             // .. ResourceIdentity
             sessionConfiguration.ResourceIdentity(x => x.Id)
